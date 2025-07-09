@@ -28,7 +28,7 @@ Local Text is an Android application developed for @businesslocal that enables b
 1. **Download & Install:**
    - Download the Local Text APK from the web dashboard and install it on your Android device.
 2. **Pair Device:**
-   - Log in to the web dashboard, go to "Manage Device", and scan the QR code using the app.
+   - Log in to the web dashboard, go to "Add Device", and scan the QR code using the app.
 3. **Send SMS:**
    - Use the web dashboard to send SMS via your paired device(s).
 4. **Manage Devices:**
@@ -57,5 +57,5 @@ This project is proprietary and developed for @businesslocal. For licensing or b
 
 ---
 
-For more information, visit [localtext.businesslocal.com.au](https://businesslocal.com.au) or contact [@Ridge19](https://github.com/Ridge19).
+For more information, visit [localtext.businesslocal.com.au](https://localtext.businesslocal.com.au) or contact [@Ridge19](https://github.com/Ridge19).
 
