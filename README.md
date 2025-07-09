@@ -38,8 +38,8 @@ Local Text is an Android application developed for @businesslocal that enables b
 
 ## Screenshots
 
-![Device Pairing](docs/screenshots/device_pairing.png)
-![Login Screen](docs/screenshots/login_screen.png)
+![Device Pairing](app/src/main/res/drawable/Screenshots/device_pairing.png)
+![Login Screen](app/src/main/res/drawable/Screenshots/login_screen.png)
 
 ## Tech Stack
 - Java (Android)
@@ -49,7 +49,7 @@ Local Text is an Android application developed for @businesslocal that enables b
 - Material Design UI
 
 ## Contributors
-- [@Ridge19](https://github.com/Ridge19) (Lead Developer)
+- [@Ridge19](https://github.com/Ridge19) (Developer)
 - [@businesslocal](https://github.com/businesslocal) (Organisation)
 
 ## License
@@ -57,5 +57,5 @@ This project is proprietary and developed for @businesslocal. For licensing or b
 
 ---
 
-For more information, visit [businesslocal.com.au](https://businesslocal.com.au) or contact [@Ridge19](https://github.com/Ridge19).
+For more information, visit [localtext.businesslocal.com.au](https://businesslocal.com.au) or contact [@Ridge19](https://github.com/Ridge19).
 
