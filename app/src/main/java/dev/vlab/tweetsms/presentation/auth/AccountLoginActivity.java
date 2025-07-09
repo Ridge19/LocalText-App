@@ -224,6 +224,16 @@ public class AccountLoginActivity extends AppCompatActivity {
             }
         });
 
+        rememberMeCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!isChecked) {
+                // User unticked Remember Me: clear connection (QR data)
+                SharedPrefManager manager = SharedPrefManager.getInstance(AccountLoginActivity.this);
+                manager.setQrData("");
+                prefs.edit().remove("remember_me").remove("username").remove("password").apply();
+            }
+            // If checked, do nothing here; credentials will be saved on login
+        });
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {

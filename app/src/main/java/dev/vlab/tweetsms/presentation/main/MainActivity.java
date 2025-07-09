@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
 
     void gotoLoginActivity() {
         SharedPrefManager manager = SharedPrefManager.getInstance(MainActivity.this);
-        manager.setQrData("");
+        // Do NOT clear QR data here, so device stays remembered after logout
         Toasty.success(MainActivity.this, "Logout successful", Toast.LENGTH_SHORT, true).show();
         startActivity(new Intent(MainActivity.this, AccountLoginActivity.class));
         finish();
@@ -480,7 +480,8 @@ public class MainActivity extends AppCompatActivity {
             statusText.setText("Disconnected");
 //            restartActivity();
             disConnectPusher();
-
+            // Always go to login activity after logout
+            gotoLoginActivity();
         }
 
     }
