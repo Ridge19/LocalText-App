@@ -1,0 +1,60 @@
+<resources>
+    <string name="app_name">TweetSMS</string>
+    <string name="auto_reply">Auto Reply</string>
+    <string name="ussd">USSD</string>
+    <string name="sender">Sender</string>
+    <string name="messages">Messages</string>
+    <string name="contacts">Contacts</string>
+    <string name="templates">Templates</string>
+    <string name="blacklist">Blacklist</string>
+    <string name="devices">Devices</string>
+    <string name="profile">Profile</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="logout">Logout</string>
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="connected">Connected</string>
+    <string name="login_title">Welcome</string>
+    <string name="login_sub">Please login with your information</string>
+    <string name="email_or_username">Email or Username</string>
+    <string name="username_or_email">Email or Username</string>
+    <string name="enter_email_or_username">Enter your email or username</string>
+    <string name="Password">Password</string>
+    <string name="confirm_Password">Confirm Password</string>
+    <string name="password_hint">******</string>
+    <string name="remember">Remember me</string>
+    <string name="forgot_pass">Forgot password?</string>
+    <string name="login">Login</string>
+    <string name="sending">Sending...</string>
+    <string name="title_activity_forgo">forgo</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="Forgot_password">Forgot Password</string>
+    <string name="recoverAccount">Recover Account</string>
+    <string name="recoverAccount_sub">Enter your email or username below to receive a password reset verification code</string>
+
+    <string name="password_verification">Password Verification</string>
+    <string name="password_verification_sub">A 6 digits verification code send to your email address :</string>
+    <string name="not_receive_code">Didn\'t Receive Code ?</string>
+    <string name="resend_code">Resend Code</string>
+    <string name="verify">Verify</string>
+    <string name="submit">Submit</string>
+    <string name="continueWithQR"><u>Continue with QR</u></string>
+
+    <string name="reset_password">Reset Password</string>
+    <string name="resendCode">Resend Code</string>
+    <string name="didNotReceiveCode">Didn\'t Receive Code ?</string>
+    <string name="reset_password_sub">To secure your account please provide a secure password</string>
+
+
+
+
+</resources>

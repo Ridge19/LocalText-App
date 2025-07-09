@@ -1,0 +1,66 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'dev.vlab.tweetsms'
+    compileSdk 35
+
+
+    defaultConfig {
+        applicationId "dev.vlab.tweetsms"
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    buildFeatures {
+        viewBinding true
+    }
+
+}
+
+dependencies {
+
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.annotation
+    implementation libs.lifecycle.livedata.ktx
+    implementation libs.lifecycle.viewmodel.ktx
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+    implementation libs.constraintlayout
+    implementation libs.play.services.auth.api.phone
+    implementation libs.work.runtime
+    implementation libs.legacy.support.v4
+    implementation libs.zxing.android.embedded
+    coreLibraryDesugaring libs.desugar.jdk.libs
+    //for rest api
+    implementation libs.retrofit
+    implementation libs.converter.scalars
+    implementation libs.converter.gson
+    implementation libs.circleimageview
+    implementation libs.pusher.java.client
+    implementation libs.circleimageview
+    implementation libs.retrofit
+    implementation libs.converter.gson
+    implementation libs.converter.scalars
+    implementation libs.okhttp
+    implementation libs.work.runtime
+    implementation libs.toasty
+
+}
