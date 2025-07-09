@@ -13,7 +13,9 @@ import retrofit2.Retrofit;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.InputType;
@@ -28,13 +30,11 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.Intent;
+import android.widget.EditText;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.widget.EditText;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,6 +50,7 @@ public class AccountLoginActivity extends AppCompatActivity {
     ProgressBar progressBar ;
 
     ImageView eyeIcon;
+    CheckBox rememberMeCheckBox;
 
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -64,6 +65,15 @@ public class AccountLoginActivity extends AppCompatActivity {
         forgot = findViewById(R.id.routeForgot);
         eyeIcon =  findViewById(R.id.eye_icon);
         progressBar = findViewById(R.id.progressBar);
+        rememberMeCheckBox = findViewById(R.id.checkbox_remember_me);
+
+        SharedPreferences prefs = getSharedPreferences("login_prefs", MODE_PRIVATE);
+        // Restore saved credentials if Remember Me was checked
+        if (prefs.getBoolean("remember_me", false)) {
+            etEmailUsername.setText(prefs.getString("username", ""));
+            password.setText(prefs.getString("password", ""));
+            rememberMeCheckBox.setChecked(true);
+        }
 
         //
         Window window = this.getWindow();
@@ -93,12 +103,22 @@ public class AccountLoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 String inputEmailUsername = etEmailUsername.getText().toString().trim();
                 String inputPassword = password.getText().toString().trim();
                 if (inputEmailUsername.isEmpty() || inputPassword.isEmpty()) {
                     Toast.makeText(AccountLoginActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-                }else {
+                } else {
+                    // Save credentials if Remember Me is checked
+                    if (rememberMeCheckBox.isChecked()) {
+                        prefs.edit()
+                            .putBoolean("remember_me", true)
+                            .putString("username", inputEmailUsername)
+                            .putString("password", inputPassword)
+                            .apply();
+                    } else {
+                        prefs.edit().clear().apply();
+                    }
+
                     btnLogin.setEnabled(false);
                     btnLogin.setText(""); // Hide button text
                     progressBar.setVisibility(View.VISIBLE); // Show loading indicator
@@ -117,7 +137,18 @@ public class AccountLoginActivity extends AppCompatActivity {
                                 Log.d("API_Response", "Response: " + (responseBody != null ? responseBody : "null body"));
 
                                 if (!response.isSuccessful() || responseBody == null) {
-                                    Toasty.error(AccountLoginActivity.this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show();
+                                    String errorMsg = "Login failed. Please try again.";
+                                    if (response.errorBody() != null) {
+                                        try {
+                                            String errorBodyStr = response.errorBody().string();
+                                            if (errorBodyStr.toLowerCase().contains("invalid") || errorBodyStr.toLowerCase().contains("incorrect")) {
+                                                errorMsg = "Incorrect email or password.";
+                                            }
+                                        } catch (Exception e) {
+                                            // ignore, use default errorMsg
+                                        }
+                                    }
+                                    Toasty.error(AccountLoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                                     return;
                                 }
 

@@ -151,12 +151,16 @@
                     android:focusable="true"/>
             </RelativeLayout>
 
-
-
-
-            <View
+            <!-- Remember Me Checkbox -->
+            <CheckBox
+                android:id="@+id/checkbox_remember_me"
                 android:layout_width="wrap_content"
-                android:layout_height="10dp" />
+                android:layout_height="wrap_content"
+                android:text="Remember Me"
+                android:textColor="@color/black"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"/>
+
 
             <RelativeLayout
                 android:layout_width="match_parent"
