@@ -19,8 +19,10 @@ import android.provider.Settings;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -84,6 +86,15 @@ public class LoginActivity extends AppCompatActivity {
 
         qrBtn = findViewById(R.id.qr_fab);
         qrBtn.setOnClickListener(view -> openQrScanner());
+
+        Button logoutButton = findViewById(R.id.logout);
+        logoutButton.setOnClickListener(v -> {
+            // Go to AccountLoginActivity (activity_auth.xml)
+            Intent intent = new Intent(LoginActivity.this, AccountLoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
 
     }
 

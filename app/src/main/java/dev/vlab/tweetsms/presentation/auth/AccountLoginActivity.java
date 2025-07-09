@@ -121,61 +121,54 @@ public class AccountLoginActivity extends AppCompatActivity {
                                     return;
                                 }
 
-                                try {
-                                    JSONObject object = new JSONObject(responseBody);
-                                    String status = object.optString("status", "");
+                                if (response.isSuccessful() && responseBody != null) {
+                                    JSONObject object = null;
+                                    try {
+                                        object = new JSONObject(responseBody);
+                                        String success = object.optString("status", "");
+                                        if (success.equals("success")) {
 
-                                    if (!"success".equals(status)) {
-                                        String errorMsg = "Unknown error";
-                                        if (object.has("errors")) {
-                                            JSONArray errorsArray = object.optJSONArray("errors");
-                                            if (errorsArray != null) {
-                                                errorMsg = errorsArray.toString();
+                                            JSONObject userData = object.optJSONObject("data");
+                                            if (userData == null) {
+                                                Toasty.error(AccountLoginActivity.this, "Error: Missing user data", Toast.LENGTH_SHORT).show();
+                                                return;
                                             }
+
+                                            String accessToken = userData.optString("access_token", null);
+                                            String tokenType = userData.optString("token_type", null);
+
+                                            if (accessToken == null || tokenType == null) {
+                                                Toasty.error(AccountLoginActivity.this, "Login failed: Missing token data", Toast.LENGTH_SHORT).show();
+                                                return;
+                                            }
+
+                                            SharedPrefManager manager = SharedPrefManager.getInstance(AccountLoginActivity.this);
+                                            manager.setToken(tokenType + " " + accessToken);
+                                            manager.setBaseUrl(UrlContainer.getBaseUrl());
+
+                                            // Optional: Log token
+                                            Log.d("accessToken>>>", tokenType + " " + accessToken);
+
+                                            // Handle pusher details
+                                            JSONObject pusherObj = userData.optJSONObject("pusher");
+                                            if (pusherObj != null) {
+                                                manager.setPusherKey(pusherObj.optString("pusher_key", null));
+                                                manager.setPusherId(pusherObj.optString("pusher_id", null));
+                                                manager.setPusherSecret(pusherObj.optString("pusher_secret", null));
+                                                manager.setPusherCluster(pusherObj.optString("pusher_cluster", null));
+                                            }
+
+                                            Toasty.success(AccountLoginActivity.this, "Login Success").show();
+
+                                            Intent intent = new Intent(AccountLoginActivity.this, LoginActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                            return;
                                         }
-                                        Toasty.error(AccountLoginActivity.this, "Error: " + errorMsg, Toast.LENGTH_SHORT).show();
-                                        return;
+                                    } catch (Exception e) {
+                                        Log.e("API_Exception", "Exception while parsing response", e);
+                                        Toasty.error(AccountLoginActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
-
-                                    JSONObject userData = object.optJSONObject("data");
-                                    if (userData == null) {
-                                        Toasty.error(AccountLoginActivity.this, "Error: Missing user data", Toast.LENGTH_SHORT).show();
-                                        return;
-                                    }
-
-                                    String accessToken = userData.optString("access_token", null);
-                                    String tokenType = userData.optString("token_type", null);
-
-                                    if (accessToken == null || tokenType == null) {
-                                        Toasty.error(AccountLoginActivity.this, "Login failed: Missing token data", Toast.LENGTH_SHORT).show();
-                                        return;
-                                    }
-
-                                    SharedPrefManager manager = SharedPrefManager.getInstance(AccountLoginActivity.this);
-                                    manager.setToken(tokenType + " " + accessToken);
-                                    manager.setBaseUrl(UrlContainer.getBaseUrl());
-
-                                    // Optional: Log token
-                                    Log.d("accessToken>>>", tokenType + " " + accessToken);
-
-                                    // Handle pusher details
-                                    JSONObject pusherObj = userData.optJSONObject("pusher");
-                                    if (pusherObj != null) {
-                                        manager.setPusherKey(pusherObj.optString("pusher_key", null));
-                                        manager.setPusherId(pusherObj.optString("pusher_id", null));
-                                        manager.setPusherSecret(pusherObj.optString("pusher_secret", null));
-                                        manager.setPusherCluster(pusherObj.optString("pusher_cluster", null));
-                                    }
-
-                                    Toasty.success(AccountLoginActivity.this, "Login Success").show();
-
-                                    Intent intent = new Intent(AccountLoginActivity.this, LoginActivity.class);
-                                    startActivity(intent);
-                                    finish();
-
-                                } catch (Exception e) {
-                                    Log.e("API_Exception", "Exception while parsing response", e);
-                                    Toasty.error(AccountLoginActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 }
                             }
 

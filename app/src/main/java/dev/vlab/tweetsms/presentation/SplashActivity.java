@@ -41,26 +41,12 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void authMiddleware(){
-        SharedPrefManager manager = SharedPrefManager.getInstance(SplashActivity.this);
-        Retrofit retrofit = RetrofitInstance.getRetrofitInstance(UrlContainer.getBaseUrl());
-        ApiInterface apiResponse = retrofit.create(ApiInterface.class);
-     //  manager.setToken("");
-        String token = manager.getToken();
-
-        new Handler().postDelayed(()->{
-            if (token == null || token.isEmpty() || token.contains("null")) {
-                Intent intent = new Intent(SplashActivity.this, AccountLoginActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            }else{
-                Log.e("TOKEN -ELSE", token);
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            }
-        },1000);
-
+        // Always go to AccountLoginActivity (activity_auth.xml) on app start
+        new Handler().postDelayed(() -> {
+            Intent intent = new Intent(SplashActivity.this, AccountLoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        }, 500);
     }
 }

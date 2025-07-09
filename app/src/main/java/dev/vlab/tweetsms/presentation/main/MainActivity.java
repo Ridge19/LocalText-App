@@ -15,6 +15,7 @@ import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,7 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
     Context ctx;
 
-    TextView statusText, logoutButton;
+    TextView statusText;
+    Button logoutButton;
     LinearLayout connectedLL;
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
@@ -110,8 +112,9 @@ public class MainActivity extends AppCompatActivity {
                         manager.setStatus("false");
                         logoutButton.setText("Logout....");
                         logout();
-                        logoutButton.setText("Logout");
-                        gotoLoginActivity();
+                        // Don't set text back to "Logout" here, as the activity will finish or change
+                        // Optionally, you can disable the button to prevent double clicks
+                        logoutButton.setEnabled(false);
                     })
                     .setNegativeButton("No", (dialog, which) -> {
                         // Dismiss the dialog
@@ -499,7 +502,3 @@ public class MainActivity extends AppCompatActivity {
     }
 
 }
-
-
-
-

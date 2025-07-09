@@ -37,4 +37,24 @@
             />
     </LinearLayout>
 
+    <Button
+        android:id="@+id/logout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"
+        android:backgroundTint="@color/red"
+        android:elevation="4dp"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="8dp"
+        android:text="@string/logout"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:drawablePadding="8dp"
+        android:contentDescription="@string/logout"
+        android:clickable="true"
+        android:focusable="true"/>
+
 </RelativeLayout>
