@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TweetSMS</string>
+    <string name="app_name">LocalText</string>
     <string name="auto_reply">Auto Reply</string>
     <string name="ussd">USSD</string>
     <string name="sender">Sender</string>

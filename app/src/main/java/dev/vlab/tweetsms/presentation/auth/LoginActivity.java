@@ -55,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
     String deviceIMEI = "", deviceName, androidVersion, appVersion;
 
 
-    @SuppressLint("SourceLockedOrientationActivity")
+    @SuppressLint({"SourceLockedOrientationActivity", "HardwareIds"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,15 +64,13 @@ public class LoginActivity extends AppCompatActivity {
         Window window = this.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        //  window.setStatusBarColor(getResources().getColor(R.color.splash_screen_bg));
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.splash_screen_bg));
         getWindow().setNavigationBarColor(ContextCompat.getColor(this, R.color.splash_screen_bg));
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         CheckPermissionAndStartIntent();
         getSimInfo();
-        setDeviceInfoData();
-
+        setDeviceInfoData(); // Call the method here
 
         SharedPrefManager manager = SharedPrefManager.getInstance(LoginActivity.this);
         String qrCode = manager.getQrData();
@@ -87,6 +85,23 @@ public class LoginActivity extends AppCompatActivity {
         qrBtn = findViewById(R.id.qr_fab);
         qrBtn.setOnClickListener(view -> openQrScanner());
 
+    }
+
+    // Collects device info and assigns to class variables
+    private void setDeviceInfoData() {
+        try {
+            String imei = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+            deviceIMEI = imei != null ? imei : "";
+            deviceName = Build.BRAND != null ? Build.BRAND : "";
+            androidVersion = Build.VERSION.RELEASE != null ? Build.VERSION.RELEASE : "";
+            appVersion = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting device info: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            deviceIMEI = "";
+            deviceName = "";
+            androidVersion = "";
+            appVersion = "";
+        }
     }
 
 

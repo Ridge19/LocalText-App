@@ -36,6 +36,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.widget.EditText;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class AccountLoginActivity extends AppCompatActivity {
@@ -109,81 +110,73 @@ public class AccountLoginActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
                                 btnLogin.setEnabled(true);
-                                btnLogin.setText("Login"); // Restore button text
-                                progressBar.setVisibility(View.GONE); // Hide loading indicator
+                                btnLogin.setText("Login");
+                                progressBar.setVisibility(View.GONE);
 
                                 String responseBody = response.body();
-                                Log.d("Success>>>", "Response: " + (responseBody != null ? responseBody : "null body"));
+                                Log.d("API_Response", "Response: " + (responseBody != null ? responseBody : "null body"));
 
-                                if (response.isSuccessful() && responseBody != null) {
-                                    JSONObject object = null;
-                                    try {
-                                        object = new JSONObject(responseBody);
-                                        String success = object.getString("status");
-                                        if (success.equals("success")) {
-                                            JSONObject userData = object.getJSONObject("data");
-                                            String accessToken = userData.getString("access_token");
-                                            String tokenType = userData.getString("token_type");
-                                            Log.d("accessToken>>>", accessToken);
-                                            Toasty.success(AccountLoginActivity.this, "Login Success").show();
-
-                                            //pusher json
-                                            JSONObject pusherObj = userData.getJSONObject("pusher");
-                                            String pusherKey = pusherObj.getString("pusher_key");
-                                            String pusherId = pusherObj.getString("pusher_id");
-                                            String pusherSecretId = pusherObj.getString("pusher_secret");
-                                            String pusherClusterId = pusherObj.getString("pusher_cluster");
-
-                                            Toasty.success(AccountLoginActivity.this, "Login Success").show();
-                                            SharedPrefManager manager = SharedPrefManager.getInstance(AccountLoginActivity.this);
-                                            manager.setToken(tokenType + " " + accessToken);
-                                            Log.i("Token",tokenType + " " + accessToken);
-                                            //pusher data
-                                            manager.setPusherKey(pusherKey);
-                                            manager.setPusherId(pusherId);
-                                            manager.setPusherSecret(pusherSecretId);
-                                            manager.setPusherCluster(pusherClusterId);
-
-                                            //save base url
-                                            manager.setBaseUrl(UrlContainer.getBaseUrl());
-                                            btnLogin.setText(R.string.login);
-                                            btnLogin.setEnabled(true);
-                                            progressBar.setVisibility(View.GONE);
-                                            Intent intent = new Intent(AccountLoginActivity.this, LoginActivity.class);
-                                            startActivity(intent);
-                                            finish();
-
-                                        } else {
-                                            btnLogin.setText(R.string.login);
-                                            btnLogin.setEnabled(true);
-                                            progressBar.setVisibility(View.GONE);
-                                            Toasty.error(AccountLoginActivity.this, "Error: " + object.getJSONArray("errors").toString(), Toast.LENGTH_SHORT).show();
-                                        }
-
-                                    } catch (Exception e) {
-                                        btnLogin.setText(R.string.login);
-                                        btnLogin.setEnabled(true);
-                                        progressBar.setVisibility(View.GONE);
-                                        Log.e("EXCEPTION", e.getMessage());
-                                        Toasty.error(AccountLoginActivity.this, "Unauthorized user", Toast.LENGTH_SHORT).show();
-
-                                    }
-                                } else {
-                                    btnLogin.setText(R.string.login);
-                                    btnLogin.setEnabled(true);
-                                    progressBar.setVisibility(View.GONE);
-
-                                    String errorMsg = "Failed to login";
-                                    if (response.errorBody() != null) {
-                                        try {
-                                            errorMsg = response.errorBody().string();
-                                        } catch (Exception e) {
-                                            Log.e("ERROR", "Error reading error body: " + e.getMessage());
-                                        }
-                                    }
-                                    Toasty.error(AccountLoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+                                if (!response.isSuccessful() || responseBody == null) {
+                                    Toasty.error(AccountLoginActivity.this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show();
+                                    return;
                                 }
 
+                                try {
+                                    JSONObject object = new JSONObject(responseBody);
+                                    String status = object.optString("status", "");
+
+                                    if (!"success".equals(status)) {
+                                        String errorMsg = "Unknown error";
+                                        if (object.has("errors")) {
+                                            JSONArray errorsArray = object.optJSONArray("errors");
+                                            if (errorsArray != null) {
+                                                errorMsg = errorsArray.toString();
+                                            }
+                                        }
+                                        Toasty.error(AccountLoginActivity.this, "Error: " + errorMsg, Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+
+                                    JSONObject userData = object.optJSONObject("data");
+                                    if (userData == null) {
+                                        Toasty.error(AccountLoginActivity.this, "Error: Missing user data", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+
+                                    String accessToken = userData.optString("access_token", null);
+                                    String tokenType = userData.optString("token_type", null);
+
+                                    if (accessToken == null || tokenType == null) {
+                                        Toasty.error(AccountLoginActivity.this, "Login failed: Missing token data", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+
+                                    SharedPrefManager manager = SharedPrefManager.getInstance(AccountLoginActivity.this);
+                                    manager.setToken(tokenType + " " + accessToken);
+                                    manager.setBaseUrl(UrlContainer.getBaseUrl());
+
+                                    // Optional: Log token
+                                    Log.d("accessToken>>>", tokenType + " " + accessToken);
+
+                                    // Handle pusher details
+                                    JSONObject pusherObj = userData.optJSONObject("pusher");
+                                    if (pusherObj != null) {
+                                        manager.setPusherKey(pusherObj.optString("pusher_key", null));
+                                        manager.setPusherId(pusherObj.optString("pusher_id", null));
+                                        manager.setPusherSecret(pusherObj.optString("pusher_secret", null));
+                                        manager.setPusherCluster(pusherObj.optString("pusher_cluster", null));
+                                    }
+
+                                    Toasty.success(AccountLoginActivity.this, "Login Success").show();
+
+                                    Intent intent = new Intent(AccountLoginActivity.this, LoginActivity.class);
+                                    startActivity(intent);
+                                    finish();
+
+                                } catch (Exception e) {
+                                    Log.e("API_Exception", "Exception while parsing response", e);
+                                    Toasty.error(AccountLoginActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
                             }
 
                             @Override
