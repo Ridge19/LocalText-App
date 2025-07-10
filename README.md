@@ -39,21 +39,35 @@ Local Text is an Android application developed for @businesslocal that enables b
 ## Screenshots
 
 ### Desktop
-<p align="center">
-  <img src="app/src/main/res/drawable/Screenshots/device_pairing.png" alt="Device Pairing" width="600"/>
-  <br/>
-  <img src="app/src/main/res/drawable/Screenshots/login_screen.png" alt="Login Screen" width="600"/>
+<p align="center"> 
+  <figure>
+    <img src="app/src/main/res/drawable/Screenshots/device_pairing.png" alt="Device Pairing" width="600"/>
+    <figcaption>Device Pairing: Scan the QR code to connect your device.</figcaption>
+  </figure>
+  <figure>
+    <img src="app/src/main/res/drawable/Screenshots/login_screen.png" alt="Login Screen" width="600"/>
+    <figcaption>Login Screen: Enter your credentials to access the app.</figcaption>
+  </figure>
 </p>
 
 ### Android
 <p align="center">
-  <img src="app/src/main/res/drawable/Screenshots/android_login.png" alt="Android Login" width="300"/>
-  <img src="app/src/main/res/drawable/Screenshots/android_device_pairing.png" alt="Android Device Pairing" width="300"/>
-  <img src="app/src/main/res/drawable/Screenshots/android_connected.png" alt="Connected to System" width="300"/>
+  <figure>
+    <img src="app/src/main/res/drawable/Screenshots/android_login.png" alt="Android Login" width="300"/>
+    <figcaption>Android Login: Enter your credentials and optionally use Remember Me to keep your details and device paired.</figcaption>
+  </figure>
+  <figure>
+    <img src="app/src/main/res/drawable/Screenshots/android_device_pairing.png" alt="Android Device Pairing" width="300"/>
+    <figcaption>Device Pairing: Scan the QR code from the web dashboard to connect your device.</figcaption>
+  </figure>
+  <figure>
+    <img src="app/src/main/res/drawable/Screenshots/android_connected.png" alt="Connected to System" width="300"/>
+    <figcaption>Connected: Your device is now paired and ready to send SMS.</figcaption>
+  </figure>
 </p>
 
 ## Tech Stack
-- Java (Android)
+- Java (Android 15)
 - Retrofit2 (API calls)
 - ZXing (QR code scanning)
 - Toasty (User notifications)
