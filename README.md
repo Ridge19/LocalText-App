@@ -38,15 +38,19 @@ Local Text is an Android application developed for @businesslocal that enables b
 
 ## Screenshots
 
-**Desktop:**
-![Device Pairing](app/src/main/res/drawable/Screenshots/device_pairing.png)
-![Login Screen](app/src/main/res/drawable/Screenshots/login_screen.png)
+### Desktop
+<p align="center">
+  <img src="app/src/main/res/drawable/Screenshots/device_pairing.png" alt="Device Pairing" width="600"/>
+  <br/>
+  <img src="app/src/main/res/drawable/Screenshots/login_screen.png" alt="Login Screen" width="600"/>
+</p>
 
-
-**Android:**
-![Android Login](app/src/main/res/drawable/Screenshots/android_login.png)
-![Android Device Pairing](app/src/main/res/drawable/Screenshots/android_device_pairing.png)
-![Connected to System](app/src/main/res/drawable/Screenshots/android_connected.png)
+### Android
+<p align="center">
+  <img src="app/src/main/res/drawable/Screenshots/android_login.png" alt="Android Login" width="300"/>
+  <img src="app/src/main/res/drawable/Screenshots/android_device_pairing.png" alt="Android Device Pairing" width="300"/>
+  <img src="app/src/main/res/drawable/Screenshots/android_connected.png" alt="Connected to System" width="300"/>
+</p>
 
 ## Tech Stack
 - Java (Android)
@@ -65,4 +69,3 @@ This project is proprietary and developed for @businesslocal. For licensing or b
 ---
 
 For more information, visit [localtext.businesslocal.com.au](https://localtext.businesslocal.com.au) or contact [@Ridge19](https://github.com/Ridge19).
-
