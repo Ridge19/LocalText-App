@@ -38,8 +38,15 @@ Local Text is an Android application developed for @businesslocal that enables b
 
 ## Screenshots
 
+**Desktop:**
 ![Device Pairing](app/src/main/res/drawable/Screenshots/device_pairing.png)
 ![Login Screen](app/src/main/res/drawable/Screenshots/login_screen.png)
+
+
+**Android:**
+![Android Login](app/src/main/res/drawable/Screenshots/android_login.png)
+![Android Device Pairing](app/src/main/res/drawable/Screenshots/android_device_pairing.png)
+![Connected to System](app/src/main/res/drawable/Screenshots/android_connected.png)
 
 ## Tech Stack
 - Java (Android)
