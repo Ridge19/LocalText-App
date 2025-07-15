@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -680,6 +681,33 @@ public class MainActivity extends AppCompatActivity {
         Toasty.info(this, "SMS app preferences reset. You'll be asked again next time.", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Check if delivery reports are supported and enabled
+     */
+    private void checkDeliveryReportSupport() {
+        try {
+            // Check if the device supports delivery reports
+            TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            
+            Log.i(TAG, "=== DELIVERY REPORT DIAGNOSTICS ===");
+            Log.i(TAG, "Network operator: " + telephonyManager.getNetworkOperatorName());
+            Log.i(TAG, "SIM operator: " + telephonyManager.getSimOperatorName());
+            Log.i(TAG, "Is default SMS app: " + isDefaultSmsApp());
+            
+            // Note: There's no direct API to check if delivery reports are supported
+            // This varies by carrier and device
+            Log.i(TAG, "Note: Delivery report support depends on:");
+            Log.i(TAG, "1. Carrier support for delivery receipts");
+            Log.i(TAG, "2. Recipient device settings");
+            Log.i(TAG, "3. Network conditions");
+            Log.i(TAG, "4. Being set as default SMS app (recommended)");
+            Log.i(TAG, "=====================================");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking delivery report support: " + e.getMessage());
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -695,6 +723,9 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else if (id == R.id.menu_check_sms_capabilities) {
             checkSmsCapabilities();
+            return true;
+        } else if (id == R.id.menu_check_delivery_reports) {
+            checkDeliveryReportSupport();
             return true;
         }
         

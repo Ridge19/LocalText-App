@@ -23,15 +23,30 @@ class DeliveredReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-        changeStatus(String.valueOf(intent.getLongExtra("SMS_ID", 0)), "Delivered", context);
+        
+        long smsId = intent.getLongExtra("SMS_ID", 0);
+        Log.i(TAG, "DeliveredReceiver triggered for SMS ID: " + smsId);
+        Log.i(TAG, "Intent action: " + intent.getAction());
+        Log.i(TAG, "Result code: " + getResultCode());
+        
+        // Check if we actually received a delivery confirmation
+        if (smsId > 0) {
+            Log.i(TAG, "Processing delivery confirmation for SMS " + smsId);
+            changeStatus(String.valueOf(smsId), "Delivered", context);
+        } else {
+            Log.e(TAG, "Invalid SMS ID received in delivery confirmation: " + smsId);
+        }
 
     }
 
     void changeStatus(String messageId, String status, Context context) {
 
-
-        Log.e(TAG, "message delivery status-------------------- " + status + "  msgid " + messageId);
+        Log.e(TAG, "=== DELIVERY STATUS UPDATE ===");
+        Log.e(TAG, "Message ID: " + messageId);
+        Log.e(TAG, "Status: " + status);
+        Log.e(TAG, "Timestamp: " + System.currentTimeMillis());
+        Log.e(TAG, "=============================");
+        
         SharedPrefManager manager = SharedPrefManager.getInstance(context);
         Retrofit retrofit = RetrofitInstance.getRetrofitInstance(UrlContainer.getBaseUrl());
         ApiInterface apiResponse = retrofit.create(ApiInterface.class);
@@ -39,6 +54,8 @@ class DeliveredReceiver extends BroadcastReceiver {
 
         String mainStatus = status.equalsIgnoreCase("sent") ? "4" : status.equalsIgnoreCase("delivered") ? "1" : "9";
         String token = manager.getToken();
+        
+        Log.i(TAG, "Updating message " + messageId + " to status code: " + mainStatus + " (1=delivered, 4=sent, 9=fail)");
 
         Call<String> call = apiResponse.updateMessageStatus(token, messageId, mainStatus, ""); //1=delivered  2=pending 3=schedule 4=sent 9=fail
 
