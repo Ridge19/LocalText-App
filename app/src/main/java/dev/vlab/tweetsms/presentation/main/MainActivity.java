@@ -13,6 +13,8 @@ import android.provider.Settings;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -594,12 +596,40 @@ public class MainActivity extends AppCompatActivity {
         // Show warning if not default SMS app
         if (!isDefaultSms && canSendSms) {
             Log.w(TAG, "WARNING: App is not the default SMS app - this may cause carrier blocking");
-            new android.app.AlertDialog.Builder(this)
-                .setTitle("SMS App Warning")
-                .setMessage("Your carrier may block SMS sending because this app is not set as the default SMS app. Would you like to set it as default?")
-                .setPositiveButton("Yes", (dialog, which) -> requestDefaultSmsApp())
-                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
-                .show();
+            
+            // Check if user has already been asked and declined
+            SharedPrefManager manager = SharedPrefManager.getInstance(MainActivity.this);
+            boolean hasDeclinedDefaultSms = getSharedPreferences("app_preferences", MODE_PRIVATE)
+                    .getBoolean("declined_default_sms", false);
+            
+            if (!hasDeclinedDefaultSms) {
+                new android.app.AlertDialog.Builder(this)
+                    .setTitle("SMS App Warning")
+                    .setMessage("Your carrier may block SMS sending because this app is not set as the default SMS app. Would you like to set it as default?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        requestDefaultSmsApp();
+                        // Mark that user agreed to set as default
+                        getSharedPreferences("app_preferences", MODE_PRIVATE)
+                                .edit()
+                                .putBoolean("agreed_default_sms", true)
+                                .apply();
+                    })
+                    .setNegativeButton("No", (dialog, which) -> {
+                        // Remember that user declined, so we don't ask again
+                        getSharedPreferences("app_preferences", MODE_PRIVATE)
+                                .edit()
+                                .putBoolean("declined_default_sms", true)
+                                .apply();
+                        dialog.dismiss();
+                    })
+                    .setNeutralButton("Ask Later", (dialog, which) -> {
+                        // Don't save any preference, ask again next time
+                        dialog.dismiss();
+                    })
+                    .show();
+            } else {
+                Log.i(TAG, "User previously declined default SMS app request");
+            }
         }
         
         Log.i(TAG, "=== End SMS Capabilities Check ===");
@@ -634,6 +664,41 @@ public class MainActivity extends AppCompatActivity {
                 Toasty.error(this, "Cannot set as default SMS app", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    /**
+     * Reset the default SMS app preferences to allow asking the user again
+     * Call this if you want to give the user another chance to set as default SMS app
+     */
+    private void resetSmsAppPreferences() {
+        getSharedPreferences("app_preferences", MODE_PRIVATE)
+                .edit()
+                .remove("declined_default_sms")
+                .remove("agreed_default_sms")
+                .apply();
+        Log.i(TAG, "SMS app preferences have been reset");
+        Toasty.info(this, "SMS app preferences reset. You'll be asked again next time.", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        
+        if (id == R.id.menu_reset_sms_preferences) {
+            resetSmsAppPreferences();
+            return true;
+        } else if (id == R.id.menu_check_sms_capabilities) {
+            checkSmsCapabilities();
+            return true;
+        }
+        
+        return super.onOptionsItemSelected(item);
     }
 
 }
