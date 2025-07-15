@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     Button logoutButton;
     LinearLayout connectedLL;
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @SuppressLint({"QueryPermissionsNeeded", "SetTextI18n", "SourceLockedOrientationActivity"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -575,7 +574,14 @@ public class MainActivity extends AppCompatActivity {
                         SubscriptionInfo info = subscriptionInfoList.get(i);
                         Log.i(TAG, "SIM " + (i + 1) + ": " + info.getCarrierName() + " (ID: " + info.getSubscriptionId() + ")");
                         Log.i(TAG, "SIM " + (i + 1) + " Country: " + info.getCountryIso());
-                        Log.i(TAG, "SIM " + (i + 1) + " MCC/MNC: " + info.getMccString() + "/" + info.getMncString());
+                        
+                        // Check API level for getMccString/getMncString (requires API 29+)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            Log.i(TAG, "SIM " + (i + 1) + " MCC/MNC: " + info.getMccString() + "/" + info.getMncString());
+                        } else {
+                            // For older API levels, we can get MCC/MNC from other sources or skip
+                            Log.i(TAG, "SIM " + (i + 1) + " MCC/MNC: Not available (API < 29)");
+                        }
                     }
                 } else {
                     Log.w(TAG, "No active SIM subscriptions found");

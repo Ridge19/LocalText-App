@@ -23,7 +23,6 @@ import android.telephony.SubscriptionManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Data;
@@ -193,7 +192,6 @@ public class SmsWorkManager extends Worker {
                             Log.i(TAG, "Subscription Succeeded for channel: " + channelName);
                         }
 
-                        @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
                         @Override
                         public void onEvent(PusherEvent event) {
                             Log.d(TAG, "Event received: " + event.toString());
@@ -210,7 +208,6 @@ public class SmsWorkManager extends Worker {
 
     private final Set<Integer> processedMessageIds = new HashSet<>();
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     void processEvent(String event) {
         try {
             JSONObject object = new JSONObject(event);
@@ -282,9 +279,16 @@ public class SmsWorkManager extends Worker {
                 if (subscriptionInfoList != null && !subscriptionInfoList.isEmpty()) {
                     SubscriptionInfo primarySim = subscriptionInfoList.get(0);
                     String carrierName = primarySim.getCarrierName().toString().toLowerCase();
-                    String mccMnc = primarySim.getMccString() + primarySim.getMncString();
                     
-                    Log.i(TAG, "Carrier: " + carrierName + ", MCC/MNC: " + mccMnc);
+                    Log.i(TAG, "Carrier: " + carrierName);
+                    
+                    // Get MCC/MNC only on API 29+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        String mccMnc = primarySim.getMccString() + primarySim.getMncString();
+                        Log.i(TAG, "MCC/MNC: " + mccMnc);
+                    } else {
+                        Log.i(TAG, "MCC/MNC: Not available (API < 29)");
+                    }
                     
                     // Carrier-specific delays (in milliseconds)
                     if (carrierName.contains("verizon")) {
@@ -400,11 +404,15 @@ public class SmsWorkManager extends Worker {
     BroadcastReceiver deliveredBroadcastReceiver = new DeliveredReceiver();
 
 
-    @SuppressLint("NewApi")
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void registerReceivers() {
-
-        context.registerReceiver(sendBroadcastReceiver, new IntentFilter(SMS_SENT_ACTION), Context.RECEIVER_EXPORTED);
-        context.registerReceiver(deliveredBroadcastReceiver, new IntentFilter(SMS_DELIVERED_ACTION), Context.RECEIVER_EXPORTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(sendBroadcastReceiver, new IntentFilter(SMS_SENT_ACTION), Context.RECEIVER_EXPORTED);
+            context.registerReceiver(deliveredBroadcastReceiver, new IntentFilter(SMS_DELIVERED_ACTION), Context.RECEIVER_EXPORTED);
+        } else {
+            context.registerReceiver(sendBroadcastReceiver, new IntentFilter(SMS_SENT_ACTION));
+            context.registerReceiver(deliveredBroadcastReceiver, new IntentFilter(SMS_DELIVERED_ACTION));
+        }
     }
 
     private int getSimCardId(String simSlot) {
