@@ -133,6 +133,41 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.POST_NOTIFICATIONS,
         }, 0);
 
+        // Debug SMS capabilities
+        checkSmsCapabilities();
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 0) {
+            boolean allGranted = true;
+            StringBuilder deniedPermissions = new StringBuilder();
+            
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    if (deniedPermissions.length() > 0) {
+                        deniedPermissions.append(", ");
+                    }
+                    deniedPermissions.append(permissions[i].substring(permissions[i].lastIndexOf('.') + 1));
+                }
+            }
+            
+            if (!allGranted) {
+                Log.e(TAG, "Permissions denied: " + deniedPermissions.toString());
+                Toasty.error(this, "SMS permissions required for the app to work properly", Toast.LENGTH_LONG).show();
+                
+                // Check specifically for SMS permissions
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+                    Log.e(TAG, "SEND_SMS permission denied - SMS sending will not work");
+                }
+            } else {
+                Log.i(TAG, "All permissions granted");
+            }
+        }
+
     }
 
     @Override
@@ -500,6 +535,99 @@ public class MainActivity extends AppCompatActivity {
         PusherOdk pusherOdk = PusherOdk.getInstance(UrlContainer.getBaseUrl(), manager.getPusherKey(), manager.getPusherCluster(), manager.getToken());
         pusherOdk.disconnect();
         Log.i(TAG, "Subscription DISCONNECTED");
+    }
+
+    /**
+     * Debug method to check SMS capabilities and permissions
+     */
+    private void checkSmsCapabilities() {
+        Log.i(TAG, "=== SMS Capabilities Check ===");
+        
+        // Check SMS permissions
+        boolean canSendSms = ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED;
+        boolean canReadSms = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED;
+        boolean canReceiveSms = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED;
+        boolean canReadPhoneState = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+        
+        Log.i(TAG, "SEND_SMS permission: " + canSendSms);
+        Log.i(TAG, "READ_SMS permission: " + canReadSms);
+        Log.i(TAG, "RECEIVE_SMS permission: " + canReceiveSms);
+        Log.i(TAG, "READ_PHONE_STATE permission: " + canReadPhoneState);
+        
+        // Check if app is default SMS app
+        boolean isDefaultSms = isDefaultSmsApp();
+        Log.i(TAG, "Is default SMS app: " + isDefaultSms);
+        
+        // Check if device has telephony features
+        PackageManager pm = getPackageManager();
+        boolean hasTelephony = pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
+        Log.i(TAG, "Device has telephony: " + hasTelephony);
+        
+        // Check SIM cards and carrier info
+        if (canReadPhoneState) {
+            try {
+                SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
+                List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+                
+                if (subscriptionInfoList != null) {
+                    Log.i(TAG, "Number of active SIM cards: " + subscriptionInfoList.size());
+                    for (int i = 0; i < subscriptionInfoList.size(); i++) {
+                        SubscriptionInfo info = subscriptionInfoList.get(i);
+                        Log.i(TAG, "SIM " + (i + 1) + ": " + info.getCarrierName() + " (ID: " + info.getSubscriptionId() + ")");
+                        Log.i(TAG, "SIM " + (i + 1) + " Country: " + info.getCountryIso());
+                        Log.i(TAG, "SIM " + (i + 1) + " MCC/MNC: " + info.getMccString() + "/" + info.getMncString());
+                    }
+                } else {
+                    Log.w(TAG, "No active SIM subscriptions found");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error checking SIM cards: " + e.getMessage());
+            }
+        }
+        
+        // Show warning if not default SMS app
+        if (!isDefaultSms && canSendSms) {
+            Log.w(TAG, "WARNING: App is not the default SMS app - this may cause carrier blocking");
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("SMS App Warning")
+                .setMessage("Your carrier may block SMS sending because this app is not set as the default SMS app. Would you like to set it as default?")
+                .setPositiveButton("Yes", (dialog, which) -> requestDefaultSmsApp())
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
+        }
+        
+        Log.i(TAG, "=== End SMS Capabilities Check ===");
+    }
+
+    /**
+     * Check if the app is set as the default SMS app
+     * Some carriers require this for SMS sending to work
+     */
+    private boolean isDefaultSmsApp() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            String defaultSmsApp = android.provider.Telephony.Sms.getDefaultSmsPackage(this);
+            String currentPackage = getPackageName();
+            Log.i(TAG, "Default SMS app: " + defaultSmsApp);
+            Log.i(TAG, "Current app: " + currentPackage);
+            return currentPackage.equals(defaultSmsApp);
+        }
+        return true; // For older Android versions, assume it's allowed
+    }
+
+    /**
+     * Request to become the default SMS app
+     */
+    private void requestDefaultSmsApp() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Intent intent = new Intent(android.provider.Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+            intent.putExtra(android.provider.Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, getPackageName());
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error requesting default SMS app: " + e.getMessage());
+                Toasty.error(this, "Cannot set as default SMS app", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
 }

@@ -250,19 +250,70 @@ public class SmsWorkManager extends Worker {
 
             logCurrentTime();
 
-            long delay = (long) Math.max(1, formattedMessage.length() / 153) * 2 * 1000;
-            Thread.sleep(delay);
+            // Add carrier-specific delays to avoid being blocked
+            long baseDelay = Math.max(1, formattedMessage.length() / 153) * 2 * 1000;
+            long carrierDelay = getCarrierSpecificDelay();
+            long totalDelay = baseDelay + carrierDelay;
+            
+            Log.i(TAG, "Applying delay: " + totalDelay + "ms (base: " + baseDelay + "ms, carrier: " + carrierDelay + "ms)");
+            Thread.sleep(totalDelay);
 
             if (formattedMessage.length() < 153) {
                 Log.e(TAG, "send sms " + formattedMessage);
                 sendSMS(number, formattedMessage, messageId, simSlot);
             } else {
                 Log.e(TAG, "multipart message: " + formattedMessage);
-             sendMultiPartSMS(number, formattedMessage, messageId, simSlot);
+                sendMultiPartSMS(number, formattedMessage, messageId, simSlot);
             }
         } catch (Exception e) {
             Log.e(TAG, "exception: " + e);
         }
+    }
+
+    /**
+     * Get carrier-specific delay to avoid being blocked
+     */
+    private long getCarrierSpecificDelay() {
+        try {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
+                List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+                
+                if (subscriptionInfoList != null && !subscriptionInfoList.isEmpty()) {
+                    SubscriptionInfo primarySim = subscriptionInfoList.get(0);
+                    String carrierName = primarySim.getCarrierName().toString().toLowerCase();
+                    String mccMnc = primarySim.getMccString() + primarySim.getMncString();
+                    
+                    Log.i(TAG, "Carrier: " + carrierName + ", MCC/MNC: " + mccMnc);
+                    
+                    // Carrier-specific delays (in milliseconds)
+                    if (carrierName.contains("verizon")) {
+                        return 3000; // 3 seconds for Verizon
+                    } else if (carrierName.contains("at&t") || carrierName.contains("att")) {
+                        return 2500; // 2.5 seconds for AT&T
+                    } else if (carrierName.contains("t-mobile") || carrierName.contains("tmobile")) {
+                        return 2000; // 2 seconds for T-Mobile
+                    } else if (carrierName.contains("sprint")) {
+                        return 2500; // 2.5 seconds for Sprint
+                    } else if (carrierName.contains("vodafone")) {
+                        return 3000; // 3 seconds for Vodafone
+                    } else if (carrierName.contains("orange")) {
+                        return 2500; // 2.5 seconds for Orange
+                    } else if (carrierName.contains("airtel")) {
+                        return 2000; // 2 seconds for Airtel
+                    } else if (carrierName.contains("jio") || carrierName.contains("reliance")) {
+                        return 1500; // 1.5 seconds for Jio
+                    } else {
+                        // Default conservative delay for unknown carriers
+                        return 2000; // 2 seconds default
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting carrier info: " + e.getMessage());
+        }
+        
+        return 2000; // Default 2 seconds if can't determine carrier
     }
 
 
@@ -282,6 +333,26 @@ public class SmsWorkManager extends Worker {
     }
 
     private void sendSMSInternal(String phoneNumber, String message, long messageId, String simSlot, boolean isMultipart) {
+        // Check SMS permission first
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "SMS permission not granted");
+            updateMessageStatusToFailed(messageId, "SMS permission not granted");
+            return;
+        }
+        
+        // Validate inputs
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            Log.e(TAG, "Invalid phone number");
+            updateMessageStatusToFailed(messageId, "Invalid phone number");
+            return;
+        }
+        
+        if (message == null || message.trim().isEmpty()) {
+            Log.e(TAG, "Empty message");
+            updateMessageStatusToFailed(messageId, "Empty message");
+            return;
+        }
+
         int deliveryRequestCode = (int) messageId + 5000;
         int pendingRequestCode = deliveryRequestCode + 1;
 
@@ -290,17 +361,30 @@ public class SmsWorkManager extends Worker {
 
         registerReceivers();
 
-        int smsToSendFrom = getSimCardId(simSlot);
+        try {
+            int smsToSendFrom = getSimCardId(simSlot);
+            
+            if (smsToSendFrom == -1) {
+                Log.e(TAG, "Invalid SIM slot: " + simSlot);
+                updateMessageStatusToFailed(messageId, "Invalid SIM slot");
+                return;
+            }
 
-        SmsManager smsManager = SmsManager.getSmsManagerForSubscriptionId(smsToSendFrom);
+            SmsManager smsManager = SmsManager.getSmsManagerForSubscriptionId(smsToSendFrom);
 
-        if (isMultipart) {
-            ArrayList<String> parts = smsManager.divideMessage(message);
-            ArrayList<PendingIntent> sentIntents = createIntentList(sentPI, parts.size());
-            ArrayList<PendingIntent> deliveryIntents = createIntentList(deliveredPI, parts.size());
-            smsManager.sendMultipartTextMessage(phoneNumber, null, parts, sentIntents, deliveryIntents);
-        } else {
-            smsManager.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
+            if (isMultipart) {
+                ArrayList<String> parts = smsManager.divideMessage(message);
+                ArrayList<PendingIntent> sentIntents = createIntentList(sentPI, parts.size());
+                ArrayList<PendingIntent> deliveryIntents = createIntentList(deliveredPI, parts.size());
+                smsManager.sendMultipartTextMessage(phoneNumber, null, parts, sentIntents, deliveryIntents);
+                Log.i(TAG, "Multipart SMS sent to " + phoneNumber + " via SIM slot " + simSlot);
+            } else {
+                smsManager.sendTextMessage(phoneNumber, null, message, sentPI, deliveredPI);
+                Log.i(TAG, "SMS sent to " + phoneNumber + " via SIM slot " + simSlot);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending SMS: " + e.getMessage(), e);
+            updateMessageStatusToFailed(messageId, "SMS sending failed: " + e.getMessage());
         }
     }
 
@@ -324,16 +408,53 @@ public class SmsWorkManager extends Worker {
     }
 
     private int getSimCardId(String simSlot) {
-        ArrayList<Integer> simCardList = new ArrayList<>();
-        SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
+        try {
+            ArrayList<Integer> simCardList = new ArrayList<>();
+            SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
 
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-            List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-            for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
-                simCardList.add(subscriptionInfo.getSubscriptionId());
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+                
+                if (subscriptionInfoList == null || subscriptionInfoList.isEmpty()) {
+                    Log.e(TAG, "No active SIM subscriptions found");
+                    return -1;
+                }
+                
+                for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
+                    simCardList.add(subscriptionInfo.getSubscriptionId());
+                }
+                
+                Log.i(TAG, "Available SIM slots: " + simCardList.size());
+                
+                int slotIndex;
+                try {
+                    slotIndex = simSlot.equals("1") ? 0 : 1;
+                } catch (Exception e) {
+                    Log.e(TAG, "Invalid simSlot format: " + simSlot);
+                    return -1;
+                }
+                
+                if (slotIndex >= simCardList.size()) {
+                    Log.e(TAG, "SIM slot " + simSlot + " not available. Only " + simCardList.size() + " SIM(s) found");
+                    return -1;
+                }
+                
+                return simCardList.get(slotIndex);
+            } else {
+                Log.e(TAG, "READ_PHONE_STATE permission not granted");
+                return -1;
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting SIM card ID: " + e.getMessage(), e);
+            return -1;
         }
-        return simCardList.get(simSlot.equals("1") ? 0 : 1);
+    }
+
+    private void updateMessageStatusToFailed(long messageId, String errorMsg) {
+        Log.e(TAG, "Updating message " + messageId + " to failed: " + errorMsg);
+        SharedPrefManager manager = SharedPrefManager.getInstance(context);
+        // You can implement this method to update the message status via API
+        // For now, we'll just log it
     }
 
     private ArrayList<PendingIntent> createIntentList(PendingIntent baseIntent, int size) {
@@ -344,5 +465,44 @@ public class SmsWorkManager extends Worker {
         return intents;
     }
 
+    /**
+     * Test SMS sending capability with a small test message
+     */
+    private void testSmsSending() {
+        Log.i(TAG, "Testing SMS sending capability...");
+        
+        try {
+            // Send a very short test message to yourself
+            SharedPrefManager manager = SharedPrefManager.getInstance(context);
+            // You can implement this to send a test SMS to the device's own number
+            // This helps detect if carrier is blocking
+            
+            Log.i(TAG, "SMS test initiated");
+        } catch (Exception e) {
+            Log.e(TAG, "SMS test failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Detect common carrier blocking patterns
+     */
+    private boolean isCarrierLikelyBlocking(String errorCode, String carrierName) {
+        // Common error codes that indicate carrier blocking
+        String[] blockingErrorCodes = {
+            "1", "2", "3", "4", "5", // Generic failure codes
+            "RESULT_ERROR_GENERIC_FAILURE",
+            "RESULT_ERROR_NO_SERVICE",
+            "RESULT_ERROR_RADIO_OFF"
+        };
+        
+        for (String code : blockingErrorCodes) {
+            if (errorCode.contains(code)) {
+                Log.w(TAG, "Possible carrier blocking detected for " + carrierName + " with error: " + errorCode);
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
 }

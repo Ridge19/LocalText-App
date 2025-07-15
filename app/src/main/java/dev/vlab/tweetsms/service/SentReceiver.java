@@ -27,27 +27,53 @@ class SentReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String message;
+        String errorDetail = "";
 
         long smsId = intent.getLongExtra("SMS_ID", 0);
-        Log.e(TAG, "MSG___________________________:" + getResultCode());
+        Log.e(TAG, "SMS Result Code for ID " + smsId + ": " + getResultCode());
 
         String action = intent.getAction();
-        Log.e(TAG, "result code: " + getResultCode());
         if (SMS_SENT_ACTION.equals(action)) {
             switch (getResultCode()) {
-
-
                 case Activity.RESULT_OK:
                     message = "Delivered";
+                    Log.i(TAG, "SMS " + smsId + " sent successfully");
                     changeStatus(String.valueOf(smsId), message, context, "");
                     break;
 
+                case android.telephony.SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                    message = "Failed";
+                    errorDetail = "Generic failure";
+                    Log.e(TAG, "SMS " + smsId + " failed: Generic failure");
+                    changeStatus(String.valueOf(smsId), message, context, getResultCode() + " - " + errorDetail);
+                    break;
+
+                case android.telephony.SmsManager.RESULT_ERROR_NO_SERVICE:
+                    message = "Failed";
+                    errorDetail = "No service";
+                    Log.e(TAG, "SMS " + smsId + " failed: No service");
+                    changeStatus(String.valueOf(smsId), message, context, getResultCode() + " - " + errorDetail);
+                    break;
+
+                case android.telephony.SmsManager.RESULT_ERROR_NULL_PDU:
+                    message = "Failed";
+                    errorDetail = "Null PDU";
+                    Log.e(TAG, "SMS " + smsId + " failed: Null PDU");
+                    changeStatus(String.valueOf(smsId), message, context, getResultCode() + " - " + errorDetail);
+                    break;
+
+                case android.telephony.SmsManager.RESULT_ERROR_RADIO_OFF:
+                    message = "Failed";
+                    errorDetail = "Radio off";
+                    Log.e(TAG, "SMS " + smsId + " failed: Radio off");
+                    changeStatus(String.valueOf(smsId), message, context, getResultCode() + " - " + errorDetail);
+                    break;
 
                 default:
-
-                    Log.e(TAG, "os status for sms id:  " + smsId);
                     message = "Failed";
-                    changeStatus(String.valueOf(smsId), message, context, getResultCode() + "");
+                    errorDetail = "Unknown error";
+                    Log.e(TAG, "SMS " + smsId + " failed with unknown error code: " + getResultCode());
+                    changeStatus(String.valueOf(smsId), message, context, getResultCode() + " - " + errorDetail);
 
 
             }
