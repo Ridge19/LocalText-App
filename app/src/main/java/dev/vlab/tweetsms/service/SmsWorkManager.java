@@ -251,7 +251,7 @@ public class SmsWorkManager extends Worker {
             long baseDelay = Math.max(1, formattedMessage.length() / 153) * 2 * 1000;
             long carrierDelay = getCarrierSpecificDelay();
             long totalDelay = baseDelay + carrierDelay;
-            
+
             Log.i(TAG, "Applying delay: " + totalDelay + "ms (base: " + baseDelay + "ms, carrier: " + carrierDelay + "ms)");
             Thread.sleep(totalDelay);
 
@@ -275,13 +275,13 @@ public class SmsWorkManager extends Worker {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 SubscriptionManager subscriptionManager = SubscriptionManager.from(context);
                 List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-                
+
                 if (subscriptionInfoList != null && !subscriptionInfoList.isEmpty()) {
                     SubscriptionInfo primarySim = subscriptionInfoList.get(0);
                     String carrierName = primarySim.getCarrierName().toString().toLowerCase();
-                    
+
                     Log.i(TAG, "Carrier: " + carrierName);
-                    
+
                     // Get MCC/MNC only on API 29+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         String mccMnc = primarySim.getMccString() + primarySim.getMncString();
@@ -289,7 +289,7 @@ public class SmsWorkManager extends Worker {
                     } else {
                         Log.i(TAG, "MCC/MNC: Not available (API < 29)");
                     }
-                    
+
                     // Carrier-specific delays (in milliseconds)
                     if (carrierName.contains("verizon")) {
                         return 3000; // 3 seconds for Verizon
@@ -316,7 +316,7 @@ public class SmsWorkManager extends Worker {
         } catch (Exception e) {
             Log.e(TAG, "Error getting carrier info: " + e.getMessage());
         }
-        
+
         return 2000; // Default 2 seconds if can't determine carrier
     }
 
@@ -343,14 +343,14 @@ public class SmsWorkManager extends Worker {
             updateMessageStatusToFailed(messageId, "SMS permission not granted");
             return;
         }
-        
+
         // Validate inputs
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             Log.e(TAG, "Invalid phone number");
             updateMessageStatusToFailed(messageId, "Invalid phone number");
             return;
         }
-        
+
         if (message == null || message.trim().isEmpty()) {
             Log.e(TAG, "Empty message");
             updateMessageStatusToFailed(messageId, "Empty message");
@@ -367,7 +367,7 @@ public class SmsWorkManager extends Worker {
 
         try {
             int smsToSendFrom = getSimCardId(simSlot);
-            
+
             if (smsToSendFrom == -1) {
                 Log.e(TAG, "Invalid SIM slot: " + simSlot);
                 updateMessageStatusToFailed(messageId, "Invalid SIM slot");
@@ -422,18 +422,18 @@ public class SmsWorkManager extends Worker {
 
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-                
+
                 if (subscriptionInfoList == null || subscriptionInfoList.isEmpty()) {
                     Log.e(TAG, "No active SIM subscriptions found");
                     return -1;
                 }
-                
+
                 for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
                     simCardList.add(subscriptionInfo.getSubscriptionId());
                 }
-                
+
                 Log.i(TAG, "Available SIM slots: " + simCardList.size());
-                
+
                 int slotIndex;
                 try {
                     slotIndex = simSlot.equals("1") ? 0 : 1;
@@ -441,12 +441,12 @@ public class SmsWorkManager extends Worker {
                     Log.e(TAG, "Invalid simSlot format: " + simSlot);
                     return -1;
                 }
-                
+
                 if (slotIndex >= simCardList.size()) {
                     Log.e(TAG, "SIM slot " + simSlot + " not available. Only " + simCardList.size() + " SIM(s) found");
                     return -1;
                 }
-                
+
                 return simCardList.get(slotIndex);
             } else {
                 Log.e(TAG, "READ_PHONE_STATE permission not granted");
@@ -478,13 +478,13 @@ public class SmsWorkManager extends Worker {
      */
     private void testSmsSending() {
         Log.i(TAG, "Testing SMS sending capability...");
-        
+
         try {
             // Send a very short test message to yourself
             SharedPrefManager manager = SharedPrefManager.getInstance(context);
             // You can implement this to send a test SMS to the device's own number
             // This helps detect if carrier is blocking
-            
+
             Log.i(TAG, "SMS test initiated");
         } catch (Exception e) {
             Log.e(TAG, "SMS test failed: " + e.getMessage());
@@ -497,19 +497,19 @@ public class SmsWorkManager extends Worker {
     private boolean isCarrierLikelyBlocking(String errorCode, String carrierName) {
         // Common error codes that indicate carrier blocking
         String[] blockingErrorCodes = {
-            "1", "2", "3", "4", "5", // Generic failure codes
-            "RESULT_ERROR_GENERIC_FAILURE",
-            "RESULT_ERROR_NO_SERVICE",
-            "RESULT_ERROR_RADIO_OFF"
+                "1", "2", "3", "4", "5", // Generic failure codes
+                "RESULT_ERROR_GENERIC_FAILURE",
+                "RESULT_ERROR_NO_SERVICE",
+                "RESULT_ERROR_RADIO_OFF"
         };
-        
+
         for (String code : blockingErrorCodes) {
             if (errorCode.contains(code)) {
                 Log.w(TAG, "Possible carrier blocking detected for " + carrierName + " with error: " + errorCode);
                 return true;
             }
         }
-        
+
         return false;
     }
 

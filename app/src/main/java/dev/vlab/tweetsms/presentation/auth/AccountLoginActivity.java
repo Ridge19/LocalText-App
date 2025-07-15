@@ -111,10 +111,10 @@ public class AccountLoginActivity extends AppCompatActivity {
                     // Save credentials if Remember Me is checked
                     if (rememberMeCheckBox.isChecked()) {
                         prefs.edit()
-                            .putBoolean("remember_me", true)
-                            .putString("username", inputEmailUsername)
-                            .putString("password", inputPassword)
-                            .apply();
+                                .putBoolean("remember_me", true)
+                                .putString("username", inputEmailUsername)
+                                .putString("password", inputPassword)
+                                .apply();
                     } else {
                         prefs.edit().clear().apply();
                     }

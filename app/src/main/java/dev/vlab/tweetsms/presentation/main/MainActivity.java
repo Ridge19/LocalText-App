@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 0) {
             boolean allGranted = true;
             StringBuilder deniedPermissions = new StringBuilder();
-            
+
             for (int i = 0; i < permissions.length; i++) {
                 if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                     allGranted = false;
@@ -156,11 +156,11 @@ public class MainActivity extends AppCompatActivity {
                     deniedPermissions.append(permissions[i].substring(permissions[i].lastIndexOf('.') + 1));
                 }
             }
-            
+
             if (!allGranted) {
                 Log.e(TAG, "Permissions denied: " + deniedPermissions.toString());
                 Toasty.error(this, "SMS permissions required for the app to work properly", Toast.LENGTH_LONG).show();
-                
+
                 // Check specifically for SMS permissions
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
                     Log.e(TAG, "SEND_SMS permission denied - SMS sending will not work");
@@ -544,40 +544,40 @@ public class MainActivity extends AppCompatActivity {
      */
     private void checkSmsCapabilities() {
         Log.i(TAG, "=== SMS Capabilities Check ===");
-        
+
         // Check SMS permissions
         boolean canSendSms = ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED;
         boolean canReadSms = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED;
         boolean canReceiveSms = ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED;
         boolean canReadPhoneState = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
-        
+
         Log.i(TAG, "SEND_SMS permission: " + canSendSms);
         Log.i(TAG, "READ_SMS permission: " + canReadSms);
         Log.i(TAG, "RECEIVE_SMS permission: " + canReceiveSms);
         Log.i(TAG, "READ_PHONE_STATE permission: " + canReadPhoneState);
-        
+
         // Check if app is default SMS app
         boolean isDefaultSms = isDefaultSmsApp();
         Log.i(TAG, "Is default SMS app: " + isDefaultSms);
-        
+
         // Check if device has telephony features
         PackageManager pm = getPackageManager();
         boolean hasTelephony = pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY);
         Log.i(TAG, "Device has telephony: " + hasTelephony);
-        
+
         // Check SIM cards and carrier info
         if (canReadPhoneState) {
             try {
                 SubscriptionManager subscriptionManager = SubscriptionManager.from(this);
                 List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-                
+
                 if (subscriptionInfoList != null) {
                     Log.i(TAG, "Number of active SIM cards: " + subscriptionInfoList.size());
                     for (int i = 0; i < subscriptionInfoList.size(); i++) {
                         SubscriptionInfo info = subscriptionInfoList.get(i);
                         Log.i(TAG, "SIM " + (i + 1) + ": " + info.getCarrierName() + " (ID: " + info.getSubscriptionId() + ")");
                         Log.i(TAG, "SIM " + (i + 1) + " Country: " + info.getCountryIso());
-                        
+
                         // Check API level for getMccString/getMncString (requires API 29+)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             Log.i(TAG, "SIM " + (i + 1) + " MCC/MNC: " + info.getMccString() + "/" + info.getMncString());
@@ -593,46 +593,46 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Error checking SIM cards: " + e.getMessage());
             }
         }
-        
+
         // Show warning if not default SMS app
         if (!isDefaultSms && canSendSms) {
             Log.w(TAG, "WARNING: App is not the default SMS app - this may cause carrier blocking");
-            
+
             // Check if user has already been asked and declined
             SharedPrefManager manager = SharedPrefManager.getInstance(MainActivity.this);
             boolean hasDeclinedDefaultSms = getSharedPreferences("app_preferences", MODE_PRIVATE)
                     .getBoolean("declined_default_sms", false);
-            
+
             if (!hasDeclinedDefaultSms) {
                 new android.app.AlertDialog.Builder(this)
-                    .setTitle("SMS App Warning")
-                    .setMessage("Your carrier may block SMS sending because this app is not set as the default SMS app. Would you like to set it as default?")
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        requestDefaultSmsApp();
-                        // Mark that user agreed to set as default
-                        getSharedPreferences("app_preferences", MODE_PRIVATE)
-                                .edit()
-                                .putBoolean("agreed_default_sms", true)
-                                .apply();
-                    })
-                    .setNegativeButton("No", (dialog, which) -> {
-                        // Remember that user declined, so we don't ask again
-                        getSharedPreferences("app_preferences", MODE_PRIVATE)
-                                .edit()
-                                .putBoolean("declined_default_sms", true)
-                                .apply();
-                        dialog.dismiss();
-                    })
-                    .setNeutralButton("Ask Later", (dialog, which) -> {
-                        // Don't save any preference, ask again next time
-                        dialog.dismiss();
-                    })
-                    .show();
+                        .setTitle("SMS App Warning")
+                        .setMessage("Your carrier may block SMS sending because this app is not set as the default SMS app. Would you like to set it as default?")
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            requestDefaultSmsApp();
+                            // Mark that user agreed to set as default
+                            getSharedPreferences("app_preferences", MODE_PRIVATE)
+                                    .edit()
+                                    .putBoolean("agreed_default_sms", true)
+                                    .apply();
+                        })
+                        .setNegativeButton("No", (dialog, which) -> {
+                            // Remember that user declined, so we don't ask again
+                            getSharedPreferences("app_preferences", MODE_PRIVATE)
+                                    .edit()
+                                    .putBoolean("declined_default_sms", true)
+                                    .apply();
+                            dialog.dismiss();
+                        })
+                        .setNeutralButton("Ask Later", (dialog, which) -> {
+                            // Don't save any preference, ask again next time
+                            dialog.dismiss();
+                        })
+                        .show();
             } else {
                 Log.i(TAG, "User previously declined default SMS app request");
             }
         }
-        
+
         Log.i(TAG, "=== End SMS Capabilities Check ===");
     }
 
@@ -688,12 +688,12 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Check if the device supports delivery reports
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-            
+
             Log.i(TAG, "=== DELIVERY REPORT DIAGNOSTICS ===");
             Log.i(TAG, "Network operator: " + telephonyManager.getNetworkOperatorName());
             Log.i(TAG, "SIM operator: " + telephonyManager.getSimOperatorName());
             Log.i(TAG, "Is default SMS app: " + isDefaultSmsApp());
-            
+
             // Note: There's no direct API to check if delivery reports are supported
             // This varies by carrier and device
             Log.i(TAG, "Note: Delivery report support depends on:");
@@ -702,7 +702,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "3. Network conditions");
             Log.i(TAG, "4. Being set as default SMS app (recommended)");
             Log.i(TAG, "=====================================");
-            
+
         } catch (Exception e) {
             Log.e(TAG, "Error checking delivery report support: " + e.getMessage());
         }
@@ -717,7 +717,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        
+
         if (id == R.id.menu_reset_sms_preferences) {
             resetSmsAppPreferences();
             return true;
@@ -728,7 +728,7 @@ public class MainActivity extends AppCompatActivity {
             checkDeliveryReportSupport();
             return true;
         }
-        
+
         return super.onOptionsItemSelected(item);
     }
 
